@@ -56,6 +56,9 @@ export const register = async (req, res) => {
 };
 
 /* ================= LOGIN ================= */
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MINUTES = 15;
+
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -87,10 +90,18 @@ export const login = async (req, res) => {
         }
 
         // Compare passwords
-        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            // Increment failed attempts
             user.failedLoginAttempts += 1;
+
+            if (
+                user.lockoutEnabled &&
+                user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS
+            ) {
+                user.lockoutEnd = new Date(
+                    Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000
+                );
+                user.failedLoginAttempts = 0;
+            }
 
             await user.save();
 
@@ -98,6 +109,7 @@ export const login = async (req, res) => {
                 message: 'Invalid credentials',
             });
         }
+
 
         // Reset failed attempts on success
         user.failedLoginAttempts = 0;
