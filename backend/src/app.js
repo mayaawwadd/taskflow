@@ -4,6 +4,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.routes.js';
 import workspaceRoutes from './routes/workspace.routes.js';
+import boardRoutes from './routes/board.routes.js';
+import boardMemberRoutes from './routes/boardMember.routes.js';
+import listRoutes from './routes/list.routes.js';
 
 const app = express();
 
@@ -25,5 +28,9 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);
+app.use('/api', boardMemberRoutes);
+app.use('/api', boardRoutes);
+app.use('/api', boardMemberRoutes);
+app.use('/api', listRoutes);
 
 export default app;
