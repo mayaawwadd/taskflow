@@ -7,14 +7,14 @@ export const register = async (req, res) => {
     try {
         const { firstName, lastName, email, password } = req.body;
 
-        // 1️⃣ Validate input
+        // Validate input
         if (!firstName || !lastName || !email || !password) {
             return res.status(400).json({
                 message: 'First name, last name, email, and password are required',
             });
         }
 
-        // 2️⃣ Check if user already exists
+        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(409).json({
@@ -22,10 +22,10 @@ export const register = async (req, res) => {
             });
         }
 
-        // 3️⃣ Hash password
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 4️⃣ Create user
+        // Create user
         const user = await User.create({
             firstName,
             lastName,
@@ -37,7 +37,7 @@ export const register = async (req, res) => {
             // lockout fields default automatically
         });
 
-        // 5️⃣ Respond
+        // Respond
         res.status(201).json({
             message: 'User registered successfully',
             user: {
@@ -86,7 +86,7 @@ export const login = async (req, res) => {
             });
         }
 
-        // 4️⃣ Compare passwords
+        // Compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             // Increment failed attempts
@@ -99,19 +99,19 @@ export const login = async (req, res) => {
             });
         }
 
-        // 5️⃣ Reset failed attempts on success
+        // Reset failed attempts on success
         user.failedLoginAttempts = 0;
         user.lockoutEnd = null;
         await user.save();
 
-        // 6️⃣ Generate JWT
+        // Generate JWT
         const token = jwt.sign(
             { userId: user._id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        // 7️⃣ Respond
+        // Respond
         res.status(200).json({
             token,
             user: {
