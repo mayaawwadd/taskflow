@@ -2,6 +2,7 @@ import Workspace from '../models/workspace.model.js';
 import WorkspaceMember from '../models/workspaceMember.model.js';
 import User from '../models/user.model.js';
 import { getUserWorkspaceRole } from '../utils/workspaceAuth.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 /* ========== CREATE WORKSPACE ========== */
 export const createWorkspace = async (req, res) => {
@@ -23,6 +24,16 @@ export const createWorkspace = async (req, res) => {
             workspace: workspace._id,
             user: req.user._id,
             role: 'owner',
+        });
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'workspace_created',
+            entityType: 'workspace',
+            entityId: workspace._id,
+            metadata: {
+                name: workspace.name,
+            },
         });
 
         res.status(201).json({ workspace });
@@ -59,7 +70,7 @@ export const inviteMember = async (req, res) => {
             return res.status(400).json({ message: 'Email is required' });
         }
 
-        // 1️⃣ Check inviter role
+        // Check inviter role
         const inviterRole = await getUserWorkspaceRole(
             workspaceId,
             req.user._id
@@ -69,13 +80,13 @@ export const inviteMember = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // 2️⃣ Find user
+        // Find user
         const userToInvite = await User.findOne({ email });
         if (!userToInvite) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // 3️⃣ Prevent duplicate membership
+        // Prevent duplicate membership
         const existing = await WorkspaceMember.findOne({
             workspace: workspaceId,
             user: userToInvite._id,
@@ -88,11 +99,22 @@ export const inviteMember = async (req, res) => {
                 .json({ message: 'User already a member' });
         }
 
-        // 4️⃣ Create membership
+        // Create membership
         const member = await WorkspaceMember.create({
             workspace: workspaceId,
             user: userToInvite._id,
             role,
+        });
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'workspace_member_invited',
+            entityType: 'workspace',
+            entityId: workspaceId,
+            metadata: {
+                invitedUser: userToInvite._id,
+                role,
+            },
         });
 
         res.status(201).json({ member });
@@ -106,7 +128,7 @@ export const removeMember = async (req, res) => {
     try {
         const { workspaceId, userId } = req.params;
 
-        // 1️⃣ Check remover role
+        // Check remover role
         const removerRole = await getUserWorkspaceRole(
             workspaceId,
             req.user._id
@@ -116,7 +138,7 @@ export const removeMember = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // 2️⃣ Get membership
+        // Get membership
         const membership = await WorkspaceMember.findOne({
             workspace: workspaceId,
             user: userId,
@@ -127,17 +149,27 @@ export const removeMember = async (req, res) => {
             return res.status(404).json({ message: 'Member not found' });
         }
 
-        // 3️⃣ Prevent removing owner
+        // Prevent removing owner
         if (membership.role === 'owner') {
             return res
                 .status(400)
                 .json({ message: 'Owner cannot be removed' });
         }
 
-        // 4️⃣ Soft remove
+        // Soft remove
         membership.isDeleted = true;
         membership.removedBy = req.user._id;
         await membership.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'workspace_member_removed',
+            entityType: 'workspace',
+            entityId: workspaceId,
+            metadata: {
+                removedUser: userId,
+            },
+        });
 
         res.status(200).json({ message: 'Member removed' });
     } catch (error) {
@@ -150,22 +182,29 @@ export const deleteWorkspace = async (req, res) => {
     try {
         const { workspaceId } = req.params;
 
-        // 1️⃣ Find workspace
+        // Find workspace
         const workspace = await Workspace.findById(workspaceId);
 
         if (!workspace || workspace.isDeleted) {
             return res.status(404).json({ message: 'Workspace not found' });
         }
 
-        // 2️⃣ Only owner can delete
+        // Only owner can delete
         if (workspace.owner.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Only owner can delete workspace' });
         }
 
-        // 3️⃣ Soft delete
+        // Soft delete
         workspace.isDeleted = true;
         workspace.deletedAt = new Date();
         await workspace.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'workspace_deleted',
+            entityType: 'workspace',
+            entityId: workspace._id,
+        });
 
         res.status(200).json({ message: 'Workspace deleted successfully' });
     } catch (error) {

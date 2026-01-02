@@ -1,5 +1,6 @@
 import List from '../models/list.model.js';
 import BoardMember from '../models/boardMember.model.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 /* ================= CREATE LIST ================= */
 export const createList = async (req, res) => {
@@ -11,7 +12,7 @@ export const createList = async (req, res) => {
             return res.status(400).json({ message: 'List name is required' });
         }
 
-        // 1️⃣ Check board membership
+        // Check board membership
         const membership = await BoardMember.findOne({
             board: boardId,
             user: req.user._id,
@@ -22,7 +23,7 @@ export const createList = async (req, res) => {
             return res.status(403).json({ message: 'Not a board member' });
         }
 
-        // 2️⃣ Get next order
+        // Get next order
         const lastList = await List.findOne({
             board: boardId,
             isDeleted: false,
@@ -30,12 +31,24 @@ export const createList = async (req, res) => {
 
         const nextOrder = lastList ? lastList.order + 1 : 1;
 
-        // 3️⃣ Create list
+        // Create list
         const list = await List.create({
             board: boardId,
             name,
             order: nextOrder,
             createdBy: req.user._id,
+        });
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'list_created',
+            entityType: 'list',
+            entityId: list._id,
+            metadata: {
+                board: boardId,
+                name: list.name,
+                order: list.order,
+            },
         });
 
         res.status(201).json({ list });
@@ -49,7 +62,7 @@ export const getListsByBoard = async (req, res) => {
     try {
         const { boardId } = req.params;
 
-        // 1️⃣ Check board membership
+        // Check board membership
         const membership = await BoardMember.findOne({
             board: boardId,
             user: req.user._id,
@@ -60,7 +73,7 @@ export const getListsByBoard = async (req, res) => {
             return res.status(403).json({ message: 'Not a board member' });
         }
 
-        // 2️⃣ Fetch lists
+        // Fetch lists
         const lists = await List.find({
             board: boardId,
             isDeleted: false,
@@ -100,6 +113,16 @@ export const deleteList = async (req, res) => {
         list.deletedAt = new Date();
         list.updatedBy = req.user._id;
         await list.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'list_deleted',
+            entityType: 'list',
+            entityId: list._id,
+            metadata: {
+                board: list.board,
+            },
+        });
 
         res.status(200).json({ message: 'List deleted successfully' });
     } catch (error) {
@@ -142,6 +165,16 @@ export const reorderLists = async (req, res) => {
         }));
 
         await List.bulkWrite(bulkOps);
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'lists_reordered',
+            entityType: 'board',
+            entityId: boardId,
+            metadata: {
+                listCount: orderedListIds.length,
+            },
+        });
 
         res.status(200).json({ message: 'Lists reordered successfully' });
     } catch (error) {

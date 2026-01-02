@@ -1,6 +1,7 @@
 import Card from '../models/card.model.js';
 import List from '../models/list.model.js';
 import BoardMember from '../models/boardMember.model.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 /* ================= CREATE CARD ================= */
 export const createCard = async (req, res) => {
@@ -41,6 +42,18 @@ export const createCard = async (req, res) => {
             name,
             order: nextOrder,
             createdBy: req.user._id,
+        });
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'card_created',
+            entityType: 'card',
+            entityId: card._id,
+            metadata: {
+                list: listId,
+                order: card.order,
+                name: card.name,
+            },
         });
 
         res.status(201).json({ card });
@@ -111,6 +124,18 @@ export const moveCard = async (req, res) => {
         card.updatedBy = req.user._id;
         await card.save();
 
+        await logActivity({
+            actor: req.user._id,
+            action: 'card_moved',
+            entityType: 'card',
+            entityId: card._id,
+            metadata: {
+                toList: listId,
+                newOrder: order,
+            },
+        });
+
+
         res.status(200).json({ message: 'Card moved successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -143,6 +168,16 @@ export const deleteCard = async (req, res) => {
         card.deletedAt = new Date();
         card.deletedBy = req.user._id;
         await card.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'card_deleted',
+            entityType: 'card',
+            entityId: card._id,
+            metadata: {
+                list: card.list,
+            },
+        });
 
         res.status(200).json({ message: 'Card deleted successfully' });
     } catch (error) {

@@ -1,6 +1,7 @@
 import Board from '../models/board.model.js';
 import BoardMember from '../models/boardMember.model.js';
 import WorkspaceMember from '../models/workspaceMember.model.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 /* ================= CREATE BOARD ================= */
 export const createBoard = async (req, res) => {
@@ -12,7 +13,7 @@ export const createBoard = async (req, res) => {
             return res.status(400).json({ message: 'Board title is required' });
         }
 
-        // 1️⃣ Ensure user is workspace member
+        // Ensure user is workspace member
         const workspaceMember = await WorkspaceMember.findOne({
             workspace: workspaceId,
             user: req.user._id,
@@ -23,7 +24,7 @@ export const createBoard = async (req, res) => {
             return res.status(403).json({ message: 'Not a workspace member' });
         }
 
-        // 2️⃣ Create board
+        // Create board
         const board = await Board.create({
             title,
             visibility,
@@ -31,12 +32,24 @@ export const createBoard = async (req, res) => {
             createdBy: req.user._id,
         });
 
-        // 3️⃣ Add creator as board owner
+        // Add creator as board owner
         await BoardMember.create({
             board: board._id,
             user: req.user._id,
             role: 'owner',
             addedBy: req.user._id,
+        });
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'board_created',
+            entityType: 'board',
+            entityId: board._id,
+            metadata: {
+                title: board.title,
+                workspace: workspaceId,
+                visibility: board.visibility,
+            },
         });
 
         res.status(201).json({ board });
@@ -50,7 +63,7 @@ export const getBoardsByWorkspace = async (req, res) => {
     try {
         const { workspaceId } = req.params;
 
-        // 1️⃣ Ensure user is workspace member
+        // Ensure user is workspace member
         const workspaceMember = await WorkspaceMember.findOne({
             workspace: workspaceId,
             user: req.user._id,
@@ -61,7 +74,7 @@ export const getBoardsByWorkspace = async (req, res) => {
             return res.status(403).json({ message: 'Not a workspace member' });
         }
 
-        // 2️⃣ Fetch boards
+        // Fetch boards
         const boards = await Board.find({
             workspace: workspaceId,
             isDeleted: false,
@@ -78,7 +91,7 @@ export const getBoardById = async (req, res) => {
     try {
         const { boardId } = req.params;
 
-        // 1️⃣ Check board membership
+        // Check board membership
         const membership = await BoardMember.findOne({
             board: boardId,
             user: req.user._id,
@@ -89,7 +102,7 @@ export const getBoardById = async (req, res) => {
             return res.status(403).json({ message: 'No access to this board' });
         }
 
-        // 2️⃣ Fetch board
+        // Fetch board
         const board = await Board.findOne({
             _id: boardId,
             isDeleted: false,
@@ -110,7 +123,7 @@ export const deleteBoard = async (req, res) => {
     try {
         const { boardId } = req.params;
 
-        // 1️⃣ Check board membership & role
+        // Check board membership & role
         const membership = await BoardMember.findOne({
             board: boardId,
             user: req.user._id,
@@ -123,7 +136,7 @@ export const deleteBoard = async (req, res) => {
                 .json({ message: 'Only board owner can delete board' });
         }
 
-        // 2️⃣ Find board
+        // Find board
         const board = await Board.findOne({
             _id: boardId,
             isDeleted: false,
@@ -133,11 +146,18 @@ export const deleteBoard = async (req, res) => {
             return res.status(404).json({ message: 'Board not found' });
         }
 
-        // 3️⃣ Soft delete
+        // Soft delete
         board.isDeleted = true;
         board.deletedAt = new Date();
         board.updatedBy = req.user._id;
         await board.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'board_deleted',
+            entityType: 'board',
+            entityId: board._id,
+        });
 
         res.status(200).json({ message: 'Board deleted successfully' });
     } catch (error) {

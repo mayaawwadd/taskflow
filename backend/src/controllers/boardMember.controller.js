@@ -1,6 +1,7 @@
 import BoardMember from '../models/boardMember.model.js';
 import Board from '../models/board.model.js';
 import User from '../models/user.model.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 /* ========== INVITE BOARD MEMBER ========== */
 export const inviteBoardMember = async (req, res) => {
@@ -12,7 +13,7 @@ export const inviteBoardMember = async (req, res) => {
             return res.status(400).json({ message: 'Email is required' });
         }
 
-        // 1️⃣ Check inviter role
+        // Check inviter role
         const inviter = await BoardMember.findOne({
             board: boardId,
             user: req.user._id,
@@ -23,13 +24,13 @@ export const inviteBoardMember = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // 2️⃣ Find user
+        // Find user
         const userToInvite = await User.findOne({ email });
         if (!userToInvite) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // 3️⃣ Prevent duplicates
+        // Prevent duplicates
         const existing = await BoardMember.findOne({
             board: boardId,
             user: userToInvite._id,
@@ -40,12 +41,23 @@ export const inviteBoardMember = async (req, res) => {
             return res.status(409).json({ message: 'User already on board' });
         }
 
-        // 4️⃣ Add member
+        // Add member
         const member = await BoardMember.create({
             board: boardId,
             user: userToInvite._id,
             role,
             addedBy: req.user._id,
+        });
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'board_member_invited',
+            entityType: 'board',
+            entityId: boardId,
+            metadata: {
+                invitedUser: userToInvite._id,
+                role,
+            },
         });
 
         res.status(201).json({ member });
@@ -59,7 +71,7 @@ export const removeBoardMember = async (req, res) => {
     try {
         const { boardId, userId } = req.params;
 
-        // 1️⃣ Check remover role
+        // Check remover role
         const remover = await BoardMember.findOne({
             board: boardId,
             user: req.user._id,
@@ -70,7 +82,7 @@ export const removeBoardMember = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // 2️⃣ Find membership
+        // Find membership
         const membership = await BoardMember.findOne({
             board: boardId,
             user: userId,
@@ -81,15 +93,25 @@ export const removeBoardMember = async (req, res) => {
             return res.status(404).json({ message: 'Member not found' });
         }
 
-        // 3️⃣ Prevent removing owner
+        // Prevent removing owner
         if (membership.role === 'owner') {
             return res.status(400).json({ message: 'Owner cannot be removed' });
         }
 
-        // 4️⃣ Soft delete
+        // Soft delete
         membership.isDeleted = true;
         membership.removedBy = req.user._id;
         await membership.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'board_member_removed',
+            entityType: 'board',
+            entityId: boardId,
+            metadata: {
+                removedUser: userId,
+            },
+        });
 
         res.status(200).json({ message: 'Board member removed' });
     } catch (error) {
@@ -107,7 +129,7 @@ export const changeBoardMemberRole = async (req, res) => {
             return res.status(400).json({ message: 'Role is required' });
         }
 
-        // 1️⃣ Only owner can change roles
+        // Only owner can change roles
         const owner = await BoardMember.findOne({
             board: boardId,
             user: req.user._id,
@@ -119,7 +141,7 @@ export const changeBoardMemberRole = async (req, res) => {
             return res.status(403).json({ message: 'Only owner can change roles' });
         }
 
-        // 2️⃣ Find member
+        // Find member
         const membership = await BoardMember.findOne({
             board: boardId,
             user: userId,
@@ -130,10 +152,21 @@ export const changeBoardMemberRole = async (req, res) => {
             return res.status(404).json({ message: 'Member not found' });
         }
 
-        // 3️⃣ Update role
+        // Update role
         membership.role = role;
         membership.updatedBy = req.user._id;
         await membership.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'board_member_role_changed',
+            entityType: 'board',
+            entityId: boardId,
+            metadata: {
+                targetUser: userId,
+                newRole: role,
+            },
+        });
 
         res.status(200).json({ message: 'Role updated' });
     } catch (error) {

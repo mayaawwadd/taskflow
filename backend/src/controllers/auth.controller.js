@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 /* ================= REGISTER ================= */
 export const register = async (req, res) => {
@@ -35,6 +36,13 @@ export const register = async (req, res) => {
             // avatar is automatically set by default
             // role defaults to "user"
             // lockout fields default automatically
+        });
+
+        await logActivity({
+            actor: user._id,
+            action: 'user_registered',
+            entityType: 'user',
+            entityId: user._id,
         });
 
         // Respond
@@ -89,6 +97,8 @@ export const login = async (req, res) => {
             });
         }
 
+        const isMatch = await bcrypt.compare(password, user.password);
+
         // Compare passwords
         if (!isMatch) {
             user.failedLoginAttempts += 1;
@@ -115,6 +125,13 @@ export const login = async (req, res) => {
         user.failedLoginAttempts = 0;
         user.lockoutEnd = null;
         await user.save();
+
+        await logActivity({
+            actor: user._id,
+            action: 'user_logged_in',
+            entityType: 'user',
+            entityId: user._id,
+        });
 
         // Generate JWT
         const token = jwt.sign(
