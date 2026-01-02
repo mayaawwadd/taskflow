@@ -72,7 +72,7 @@ export const getListsByBoard = async (req, res) => {
     }
 };
 
-/* ================= DELETE LIST (SOFT DELETE) ================= */
+/* ================= DELETE LIST ================= */
 export const deleteList = async (req, res) => {
     try {
         const { listId } = req.params;
@@ -102,6 +102,48 @@ export const deleteList = async (req, res) => {
         await list.save();
 
         res.status(200).json({ message: 'List deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/* ================= REORDER LISTS ================= */
+export const reorderLists = async (req, res) => {
+    try {
+        const { boardId } = req.params;
+        const { orderedListIds } = req.body;
+
+        if (!Array.isArray(orderedListIds)) {
+            return res.status(400).json({
+                message: 'orderedListIds must be an array',
+            });
+        }
+
+        // Check board membership
+        const membership = await BoardMember.findOne({
+            board: boardId,
+            user: req.user._id,
+            isDeleted: false,
+        });
+
+        if (!membership) {
+            return res.status(403).json({ message: 'Not a board member' });
+        }
+
+        // Bulk update list orders
+        const bulkOps = orderedListIds.map((listId, index) => ({
+            updateOne: {
+                filter: { _id: listId, board: boardId, isDeleted: false },
+                update: {
+                    order: index + 1,
+                    updatedBy: req.user._id,
+                },
+            },
+        }));
+
+        await List.bulkWrite(bulkOps);
+
+        res.status(200).json({ message: 'Lists reordered successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
