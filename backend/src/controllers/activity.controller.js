@@ -1,6 +1,7 @@
 import ActivityLog from '../models/activityLog.model.js';
 import BoardMember from '../models/boardMember.model.js';
 import WorkspaceMember from '../models/workspaceMember.model.js';
+import { formatActivity } from '../utils/activityFormatter.js';
 
 /* ================= BOARD ACTIVITY ================= */
 export const getBoardActivity = async (req, res) => {
@@ -30,7 +31,8 @@ export const getBoardActivity = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(50);
 
-        res.status(200).json({ activity });
+        const formatted = activity.map(formatActivity);
+        res.status(200).json({ activity: formatted });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -63,7 +65,8 @@ export const getWorkspaceActivity = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(50);
 
-        res.status(200).json({ activity });
+        const formatted = activity.map(formatActivity);
+        res.status(200).json({ activity: formatted });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
