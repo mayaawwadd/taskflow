@@ -8,6 +8,7 @@ import boardRoutes from './routes/board.routes.js';
 import boardMemberRoutes from './routes/boardMember.routes.js';
 import listRoutes from './routes/list.routes.js';
 import cardRoutes from './routes/card.routes.js';
+import activityRoutes from './routes/activity.routes.js';
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.use('/api', boardRoutes);
 app.use('/api', boardMemberRoutes);
 app.use('/api', listRoutes);
 app.use('/api', cardRoutes);
+app.use('/api', activityRoutes);
 
 export default app;
