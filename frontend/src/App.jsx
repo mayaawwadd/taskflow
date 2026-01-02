@@ -1,11 +1,20 @@
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { useThemeStore } from './store/themeStore';
+import { getAppTheme } from './theme';
+import AppRouter from './routes/AppRouter';
+import { Toaster } from 'sonner';
+
+
 function App() {
+  const { mode } = useThemeStore();
+  const theme = getAppTheme(mode);
+
   return (
-    <div>
-      <h1>TaskFlow</h1>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AppRouter />
+    </ThemeProvider>
   );
 }
 
 export default App;
-
-

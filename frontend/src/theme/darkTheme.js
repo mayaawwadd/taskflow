@@ -1,0 +1,57 @@
+import { createTheme } from '@mui/material/styles';
+
+export const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        text: { primary: '#eae9fc' },
+        background: {
+            default: '#010104',
+            paper: '#010104',
+        },
+        primary: {
+            main: '#3a31d8',
+            50: '#050415',
+            100: '#0a082b',
+            200: '#141056',
+            300: '#1e1881',
+            400: '#2821ab',
+            500: '#3129d6',
+            600: '#5b54de',
+            700: '#847ee7',
+            800: '#ada9ef',
+            900: '#d6d4f7',
+            950: '#eaeafb',
+        },
+        secondary: {
+            main: '#020024',
+            50: '#01001a',
+            100: '#030033',
+            200: '#050066',
+            300: '#080099',
+            400: '#0a00cc',
+            500: '#0d00ff',
+            600: '#3d33ff',
+            700: '#6e66ff',
+            800: '#9e99ff',
+            900: '#cfccff',
+            950: '#e7e5ff',
+        },
+        accent: {
+            main: '#0600c2',
+            50: '#01001a',
+            100: '#020033',
+            200: '#030066',
+            300: '#050099',
+            400: '#0700cc',
+            500: '#0800ff',
+            600: '#3a33ff',
+            700: '#6b66ff',
+            800: '#9c99ff',
+            900: '#ceccff',
+            950: '#e6e5ff',
+        },
+    },
+    typography: {
+        fontFamily: 'Poppins, sans-serif',
+    },
+});

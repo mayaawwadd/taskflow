@@ -1,0 +1,57 @@
+import { createTheme } from '@mui/material/styles';
+
+export const lightTheme = createTheme({
+    palette: {
+        mode: 'light',
+        text: { primary: '#040316', white: '#ffffff' },
+        background: {
+            default: '#fbfbfe',
+            paper: '#ffffff',
+        },
+        primary: {
+            main: '#2f27ce',
+            50: '#eaeafb',
+            100: '#d6d4f7',
+            200: '#ada9ef',
+            300: '#847ee7',
+            400: '#5b54de',
+            500: '#3129d6',
+            600: '#2821ab',
+            700: '#1e1881',
+            800: '#141056',
+            900: '#0a082b',
+            950: '#050415',
+        },
+        secondary: {
+            main: '#dddbff',
+            50: '#e7e5ff',
+            100: '#cfccff',
+            200: '#9e99ff',
+            300: '#6e66ff',
+            400: '#3d33ff',
+            500: '#0d00ff',
+            600: '#0a00cc',
+            700: '#080099',
+            800: '#050066',
+            900: '#030033',
+            950: '#01001a',
+        },
+        accent: {
+            main: '#443dff',
+            50: '#e6e5ff',
+            100: '#ceccff',
+            200: '#9c99ff',
+            300: '#6b66ff',
+            400: '#3a33ff',
+            500: '#0800ff',
+            600: '#0700cc',
+            700: '#050099',
+            800: '#030066',
+            900: '#020033',
+            950: '#01001a',
+        },
+    },
+    typography: {
+        fontFamily: 'Poppins, sans-serif',
+    },
+});
