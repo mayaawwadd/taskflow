@@ -194,6 +194,51 @@ export const removeMember = async (req, res) => {
     }
 };
 
+/* ========== UPDATE WORKSPACE MEMBER ROLE ========== */
+export const updateWorkspaceMemberRole = async (req, res) => {
+    try {
+        const { workspaceId, userId } = req.params;
+        const { role } = req.body;
+
+        if (!role) {
+            return res.status(400).json({ message: 'Role is required' });
+        }
+
+        // Only owner/admin can change roles
+        const requester = await WorkspaceMember.findOne({
+            workspace: workspaceId,
+            user: req.user._id,
+            isDeleted: false,
+        });
+
+        if (!requester || !['owner', 'admin'].includes(requester.role)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const membership = await WorkspaceMember.findOne({
+            workspace: workspaceId,
+            user: userId,
+            isDeleted: false,
+        });
+
+        if (!membership) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        if (membership.role === 'owner') {
+            return res.status(400).json({ message: 'Owner role cannot be changed' });
+        }
+
+        membership.role = role;
+        membership.updatedBy = req.user._id;
+        await membership.save();
+
+        res.status(200).json({ message: 'Role updated successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 /* ========== DELETE WORKSPACE ========== */
 export const deleteWorkspace = async (req, res) => {
     try {
