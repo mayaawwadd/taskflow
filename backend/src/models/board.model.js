@@ -14,6 +14,13 @@ const boardSchema = new mongoose.Schema(
             trim: true,
         },
 
+
+        description: {
+            type: String,
+            trim: true,
+            default: '',
+        },
+
         visibility: {
             type: String,
             enum: ['private', 'workspace'],

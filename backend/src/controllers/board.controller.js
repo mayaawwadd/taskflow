@@ -7,7 +7,7 @@ import { logActivity } from '../utils/activityLogger.js';
 export const createBoard = async (req, res) => {
     try {
         const { workspaceId } = req.params;
-        const { title, visibility = 'workspace' } = req.body;
+        const { title, description, visibility = 'workspace' } = req.body;
 
         if (!title) {
             return res.status(400).json({ message: 'Board title is required' });
@@ -27,6 +27,7 @@ export const createBoard = async (req, res) => {
         // Create board
         const board = await Board.create({
             title,
+            description,
             visibility,
             workspace: workspaceId,
             createdBy: req.user._id,
@@ -47,6 +48,7 @@ export const createBoard = async (req, res) => {
             entityId: board._id,
             metadata: {
                 title: board.title,
+                description: board.description || null,
                 workspace: workspaceId,
                 visibility: board.visibility,
             },
