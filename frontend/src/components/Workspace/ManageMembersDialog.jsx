@@ -215,7 +215,6 @@ const ManageMembersDialog = ({
                                                     value={member.role}
                                                     onChange={(e) => {
                                                         onUpdateRole(member.id, e.target.value);
-                                                        notify.success('Member role updated');
                                                     }}
                                                     sx={{
                                                         height: 32,
@@ -232,12 +231,16 @@ const ManageMembersDialog = ({
                                                     }}
                                                 >
                                                     <MenuItem value="admin">
-                                                        <Shield size={14} style={{ marginRight: 6 }} />
-                                                        Admin
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                            <Shield size={14} style={{ marginRight: 6 }} />
+                                                            Admin
+                                                        </Box>
                                                     </MenuItem>
                                                     <MenuItem value="member">
-                                                        <User size={14} style={{ marginRight: 6 }} />
-                                                        Member
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                            <User size={14} style={{ marginRight: 6 }} />
+                                                            Member
+                                                        </Box>
                                                     </MenuItem>
                                                 </Select>
 
@@ -245,7 +248,6 @@ const ManageMembersDialog = ({
                                                     size="small"
                                                     onClick={() => {
                                                         onRemoveMember(member.id);
-                                                        notify.success('Member removed');
                                                     }}
                                                     sx={{
                                                         color: 'text.secondary',

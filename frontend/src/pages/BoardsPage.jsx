@@ -156,6 +156,7 @@ const BoardsPage = () => {
                             background: `linear-gradient(-45deg, ${theme.palette.primary[400]}, ${theme.palette.accent.main})`,
                             textTransform: 'none',
                             fontWeight: 500,
+                            alignSelf: 'center',
                             borderRadius: 2,
                             px: 2,
                             py: 0.7,
@@ -176,7 +177,7 @@ const BoardsPage = () => {
                 ) : (
                     <Grid container spacing={4}>
                         {boards.map((board) => (
-                            <Grid key={board._id} item xs={12} sm={6} md={4} lg={3}>
+                            <Grid key={board._id} item size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                                 <Board
                                     title={board.title}
                                     description={board.description}
@@ -187,7 +188,7 @@ const BoardsPage = () => {
                         ))}
 
                         {/* Create Board Card */}
-                        <Grid item xs={12} sm={6} md={4} lg={3}>
+                        <Grid item size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                             <Card
                                 onClick={() => setOpen(true)}
                                 sx={{
@@ -291,6 +292,7 @@ const BoardsPage = () => {
                         notify.error('Failed to remove member');
                     }
                 }}
+
                 onUpdateRole={async (userId, role) => {
                     try {
                         await updateWorkspaceMemberRole(workspaceId, userId, role);
