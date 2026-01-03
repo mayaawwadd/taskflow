@@ -88,7 +88,7 @@ const WorkspacePage = () => {
                 >
                     <Box>
                         <Typography variant="h4" fontWeight={700}>
-                            My Workspace
+                            My Workspaces
                         </Typography>
                         <Typography color="text.secondary">
                             Manage your workspaces

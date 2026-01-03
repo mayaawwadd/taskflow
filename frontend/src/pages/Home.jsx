@@ -20,7 +20,7 @@ const Home = () => {
                 maxWidth="md"
                 sx={{
                     textAlign: 'center',
-                    py: { xs: 10, md: 14 },
+                    py: { xs: 8, md: 10 },
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -55,7 +55,7 @@ const Home = () => {
                         color: theme.palette.text.secondary,
                         maxWidth: 700,
                         mx: 'auto',
-                        mt: 2,
+                        // mt: 2,
                     }}
                 >
                     TaskFlow brings all your tasks, teammates, and tools together. Keep
@@ -69,7 +69,7 @@ const Home = () => {
                         flexDirection: { xs: 'column', sm: 'row' },
                         gap: 2,
                         justifyContent: 'center',
-                        mt: 4,
+                        mt: 2,
                     }}
                 >
                     <Button
@@ -102,7 +102,7 @@ const Home = () => {
             </Container>
 
             {/* Features Section */}
-            <Container maxWidth="lg" sx={{ pt: 10, pb: 10 }}>
+            <Container maxWidth="lg" sx={{ py: 7 }}>
                 <Grid container spacing={1} justifyContent="center">
                     <Grid
                         item

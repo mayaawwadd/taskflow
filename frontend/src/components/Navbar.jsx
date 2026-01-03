@@ -10,12 +10,16 @@ import { LogOut, Moon, Sun } from 'lucide-react';
 import Logo from '../assets/Logo.png';
 import { useTheme } from '@mui/material/styles';
 import { useThemeStore } from '../store/themeStore';
-import { useAuthStore } from '../store/authStore';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const { mode, toggleMode } = useThemeStore();
-    const { isLoggedIn } = useAuthStore();
+
+    // ✅ AUTH CONTEXT (single source of truth)
+    const { isAuthenticated, logout } = useAuth();
 
     return (
         <AppBar
@@ -94,9 +98,10 @@ const Navbar = () => {
                         )}
                     </IconButton>
 
-                    {isLoggedIn ? (
+                    {isAuthenticated ? (
                         <Button
                             variant="text"
+                            onClick={logout}
                             sx={{
                                 textTransform: 'none',
                                 fontWeight: 500,
@@ -122,18 +127,19 @@ const Navbar = () => {
                     ) : (
                         <Button
                             variant="contained"
+                            onClick={() => navigate('/login')}
                             sx={{
                                 background: `linear-gradient(-45deg, ${theme.palette.primary[400]}, ${theme.palette.accent.main})`,
                                 textTransform: 'none',
-                                fontWeight: 500,
                                 borderRadius: 2,
                                 px: 2,
                                 py: 0.7,
+                                fontWeight: 500,
                                 transition: '0.3s ease-in-out',
                                 '&:hover': {
                                     opacity: 0.9,
                                     color: theme.palette.text.white,
-                                    boxShadow: `0 4px 10px ${theme.palette.primary.main}33`, // subtle glow
+                                    boxShadow: `0 4px 10px ${theme.palette.primary.main}33`,
                                 },
                                 '&:focus': { outline: 'none' },
                                 '&:focus-visible': { outline: 'none' },

@@ -3,7 +3,7 @@ import { useThemeStore } from './store/themeStore';
 import { getAppTheme } from './theme';
 import AppRouter from './routes/AppRouter';
 import { Toaster } from 'sonner';
-
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   const { mode } = useThemeStore();
@@ -12,12 +12,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Toaster
-        position="top-center"
-        richColors
-        closeButton
-        theme={mode}
-      />
+      <Toaster position="top-center" richColors closeButton theme={mode} />
       <AppRouter />
     </ThemeProvider>
   );
