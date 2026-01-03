@@ -103,17 +103,26 @@ export const inviteMember = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Prevent duplicate membership
+        // Check existing membership (including deleted)
         const existing = await WorkspaceMember.findOne({
             workspace: workspaceId,
             user: userToInvite._id,
-            isDeleted: false,
         });
 
-        if (existing) {
-            return res
-                .status(409)
-                .json({ message: 'User already a member' });
+        if (existing && !existing.isDeleted) {
+            return res.status(409).json({
+                message: 'User already a member of this workspace',
+            });
+        }
+
+        if (existing && existing.isDeleted) {
+            // Reactivate membership
+            existing.isDeleted = false;
+            existing.role = role;
+            existing.addedBy = req.user._id;
+            await existing.save();
+
+            return res.status(200).json({ member: existing });
         }
 
         // Create membership
