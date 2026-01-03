@@ -5,6 +5,7 @@ import {
     getCardsByList,
     moveCard,
     deleteCard,
+    updateCard,
 } from '../controllers/card.controller.js';
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.post('/lists/:listId/cards', createCard);
 router.get('/lists/:listId/cards', getCardsByList);
 router.patch('/cards/:cardId/move', moveCard);
 router.delete('/cards/:cardId', deleteCard);
+router.patch('/cards/:cardId', updateCard);
 
 export default router;

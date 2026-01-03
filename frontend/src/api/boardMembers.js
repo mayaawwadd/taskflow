@@ -7,17 +7,17 @@ export const fetchBoardMembers = async (boardId) => {
     return res.data.members;
 };
 
-export const inviteBoardMember = async (boardId, payload) => {
-    const res = await api.post(`/boards/${boardId}/invite`, payload);
+export const inviteBoardMember = async (boardId, email, role = 'member') => {
+    const res = await api.post(`/boards/${boardId}/members`, { email, role });
     return res.data.member;
-};
-
-export const updateBoardMemberRole = async (boardId, userId, role) => {
-    const res = await api.patch(`/boards/${boardId}/members/${userId}`, { role });
-    return res.data;
 };
 
 export const removeBoardMember = async (boardId, userId) => {
     const res = await api.delete(`/boards/${boardId}/members/${userId}`);
+    return res.data;
+};
+
+export const updateBoardMemberRole = async (boardId, userId, role) => {
+    const res = await api.patch(`/boards/${boardId}/members/${userId}`, { role });
     return res.data;
 };

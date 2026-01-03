@@ -184,3 +184,49 @@ export const deleteCard = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+/* ================= UPDATE CARD ================= */
+export const updateCard = async (req, res) => {
+    try {
+        const { cardId } = req.params;
+        const { name } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ message: 'Card name is required' });
+        }
+
+        const card = await Card.findById(cardId);
+        if (!card || card.isDeleted) {
+            return res.status(404).json({ message: 'Card not found' });
+        }
+
+        const list = await List.findById(card.list);
+
+        const membership = await BoardMember.findOne({
+            board: list.board,
+            user: req.user._id,
+            isDeleted: false,
+        });
+
+        if (!membership) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        card.name = name;
+        card.updatedBy = req.user._id;
+        await card.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'card_updated',
+            entityType: 'card',
+            entityId: card._id,
+            metadata: { name },
+        });
+
+        res.status(200).json({ card });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+

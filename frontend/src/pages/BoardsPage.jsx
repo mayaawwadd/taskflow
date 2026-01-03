@@ -50,28 +50,29 @@ const BoardsPage = () => {
     });
 
     /* ================= FETCH DATA ================= */
-
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoading(true);
 
-                // Workspace info
+                // Fetch workspace
                 const workspaces = await fetchWorkspaces();
-                const current = workspaces.find((w) => w._id === workspaceId);
+                const currentWorkspace = workspaces.find(
+                    (w) => w._id === workspaceId
+                );
 
-                if (!current) {
+                if (!currentWorkspace) {
                     notify.error('Workspace not found');
                     return;
                 }
 
-                setWorkspace(current);
+                setWorkspace(currentWorkspace);
 
-                // Boards
+                // Fetch boards
                 const boardsData = await fetchBoardsByWorkspace(workspaceId);
                 setBoards(boardsData);
 
-                // Members
+                // Fetch members
                 const membersData = await fetchWorkspaceMembers(workspaceId);
                 setMembers(
                     membersData.map((m) => ({
@@ -93,7 +94,6 @@ const BoardsPage = () => {
     }, [workspaceId, theme.palette.primary.main]);
 
     /* ================= CREATE BOARD ================= */
-
     const handleCreateBoard = async () => {
         if (!newBoard.title.trim()) {
             notify.error('Board title is required');
@@ -101,16 +101,21 @@ const BoardsPage = () => {
         }
 
         try {
-            const board = await createBoard(workspaceId, newBoard);
-            setBoards((prev) => [board, ...prev]);
+            const createdBoard = await createBoard(workspaceId, {
+                title: newBoard.title,
+                description: newBoard.description,
+            });
+
+            setBoards((prev) => [createdBoard, ...prev]);
             notify.success('Board created successfully');
             setNewBoard({ title: '', description: '' });
             setOpen(false);
-        } catch {
+        } catch (error) {
             notify.error('Failed to create board');
         }
     };
 
+    /* ================= LOADING / EMPTY ================= */
     if (loading) {
         return (
             <Box sx={{ p: 6 }}>
@@ -130,7 +135,7 @@ const BoardsPage = () => {
     return (
         <Box sx={{ minHeight: '100vh', background: theme.palette.background.default }}>
             <Container maxWidth="xl" sx={{ py: 5 }}>
-                {/* Header */}
+                {/* ---------- Header ---------- */}
                 <Box
                     sx={{
                         display: 'flex',
@@ -156,8 +161,8 @@ const BoardsPage = () => {
                             background: `linear-gradient(-45deg, ${theme.palette.primary[400]}, ${theme.palette.accent.main})`,
                             textTransform: 'none',
                             fontWeight: 500,
-                            alignSelf: 'center',
                             borderRadius: 2,
+                            alignSelf: 'center',
                             px: 2,
                             py: 0.7,
                             transition: '0.3s ease-in-out',
@@ -165,29 +170,37 @@ const BoardsPage = () => {
                                 opacity: 0.9,
                                 boxShadow: `0 4px 10px ${theme.palette.primary.main}33`,
                             },
+                            '&:focus': { outline: 'none' },
+                            '&:focus-visible': { outline: 'none' },
                         }}
                     >
                         Members ({members.length})
                     </Button>
                 </Box>
 
-                {/* Boards */}
+                {/* ---------- Boards ---------- */}
                 {boards.length === 0 ? (
                     <BoardEmpty onCreate={() => setOpen(true)} />
                 ) : (
                     <Grid container spacing={4}>
                         {boards.map((board) => (
-                            <Grid key={board._id} item size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                            <Grid
+                                key={board._id}
+                                item
+                                size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+                            >
                                 <Board
                                     title={board.title}
                                     description={board.description}
                                     color="primary"
-                                    onClick={() => navigate(`/boards/${board._id}`)}
+                                    onClick={() =>
+                                        navigate(`/boards/${workspaceId}/${board._id}`)
+                                    }
                                 />
                             </Grid>
                         ))}
 
-                        {/* Create Board Card */}
+                        {/* ---------- Create Board Card ---------- */}
                         <Grid item size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                             <Card
                                 onClick={() => setOpen(true)}
@@ -207,7 +220,9 @@ const BoardsPage = () => {
                             >
                                 <CardContent sx={{ textAlign: 'center' }}>
                                     <Plus size={32} />
-                                    <Typography fontWeight={500}>Create new board</Typography>
+                                    <Typography fontWeight={500}>
+                                        Create new board
+                                    </Typography>
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -215,7 +230,7 @@ const BoardsPage = () => {
                 )}
             </Container>
 
-            {/* Create Board Dialog */}
+            {/* ---------- Create Board Dialog ---------- */}
             <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>Create New Board</DialogTitle>
                 <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -252,7 +267,7 @@ const BoardsPage = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Members Dialog */}
+            {/* ---------- Members Dialog ---------- */}
             <ManageMembersDialog
                 open={membersOpen}
                 onClose={() => setMembersOpen(false)}
@@ -260,7 +275,6 @@ const BoardsPage = () => {
                 onAddMember={async (email) => {
                     try {
                         await inviteWorkspaceMember(workspaceId, email);
-
                         notify.success('Member invited successfully');
 
                         const updated = await fetchWorkspaceMembers(workspaceId);
@@ -282,17 +296,15 @@ const BoardsPage = () => {
                         return false;
                     }
                 }}
-
                 onRemoveMember={async (userId) => {
                     try {
                         await removeWorkspaceMember(workspaceId, userId);
                         setMembers((prev) => prev.filter((m) => m.id !== userId));
                         notify.success('Member removed');
-                    } catch (err) {
+                    } catch {
                         notify.error('Failed to remove member');
                     }
                 }}
-
                 onUpdateRole={async (userId, role) => {
                     try {
                         await updateWorkspaceMemberRole(workspaceId, userId, role);
@@ -309,7 +321,6 @@ const BoardsPage = () => {
                     }
                 }}
             />
-
         </Box>
     );
 };

@@ -173,3 +173,32 @@ export const changeBoardMemberRole = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+/* ========== GET BOARD MEMBERS ========== */
+export const getBoardMembers = async (req, res) => {
+    try {
+        const { boardId } = req.params;
+
+        const membership = await BoardMember.findOne({
+            board: boardId,
+            user: req.user._id,
+            isDeleted: false,
+        });
+
+        if (!membership) {
+            return res.status(403).json({ message: 'Not a board member' });
+        }
+
+        const members = await BoardMember.find({
+            board: boardId,
+            isDeleted: false,
+        })
+            .populate('user', 'firstName lastName email')
+            .sort({ createdAt: 1 });
+
+        res.status(200).json({ members });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
