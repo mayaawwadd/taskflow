@@ -60,6 +60,23 @@ export const getMyWorkspaces = async (req, res) => {
     }
 };
 
+/* ========== GET WORKSPACE MEMBERS ========== */
+export const getWorkspaceMembers = async (req, res) => {
+    try {
+        const { workspaceId } = req.params;
+
+        const members = await WorkspaceMember.find({
+            workspace: workspaceId,
+            isDeleted: false,
+        }).populate('user', 'firstName lastName email');
+
+        res.status(200).json({ members });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 /* ========== INVITE MEMBER ========== */
 export const inviteMember = async (req, res) => {
     try {
