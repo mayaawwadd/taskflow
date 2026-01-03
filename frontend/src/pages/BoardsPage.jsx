@@ -256,36 +256,58 @@ const BoardsPage = () => {
                 open={membersOpen}
                 onClose={() => setMembersOpen(false)}
                 members={members}
-                onAddMember={(email) =>
-                    inviteWorkspaceMember(workspaceId, email).then(() =>
-                        fetchWorkspaceMembers(workspaceId).then((res) =>
-                            setMembers(
-                                res.map((m) => ({
-                                    id: m.user._id,
-                                    name: `${m.user.firstName} ${m.user.lastName}`,
-                                    email: m.user.email,
-                                    role: m.role,
-                                    avatarColor: theme.palette.primary.main,
-                                }))
-                            )
-                        )
-                    )
-                }
-                onRemoveMember={(userId) =>
-                    removeWorkspaceMember(workspaceId, userId).then(() =>
-                        setMembers((prev) => prev.filter((m) => m.id !== userId))
-                    )
-                }
-                onUpdateRole={(userId, role) =>
-                    updateWorkspaceMemberRole(workspaceId, userId, role).then(() =>
+                onAddMember={async (email) => {
+                    try {
+                        await inviteWorkspaceMember(workspaceId, email);
+
+                        notify.success('Member invited successfully');
+
+                        const updated = await fetchWorkspaceMembers(workspaceId);
+                        setMembers(
+                            updated.map((m) => ({
+                                id: m.user._id,
+                                name: `${m.user.firstName} ${m.user.lastName}`,
+                                email: m.user.email,
+                                role: m.role,
+                                avatarColor: theme.palette.primary.main,
+                            }))
+                        );
+
+                        return true;
+                    } catch (err) {
+                        notify.error(
+                            err.response?.data?.message || 'Failed to invite member'
+                        );
+                        return false;
+                    }
+                }}
+
+                onRemoveMember={async (userId) => {
+                    try {
+                        await removeWorkspaceMember(workspaceId, userId);
+                        setMembers((prev) => prev.filter((m) => m.id !== userId));
+                        notify.success('Member removed');
+                    } catch (err) {
+                        notify.error('Failed to remove member');
+                    }
+                }}
+                onUpdateRole={async (userId, role) => {
+                    try {
+                        await updateWorkspaceMemberRole(workspaceId, userId, role);
                         setMembers((prev) =>
                             prev.map((m) =>
                                 m.id === userId ? { ...m, role } : m
                             )
-                        )
-                    )
-                }
+                        );
+                        notify.success('Role updated');
+                    } catch (err) {
+                        notify.error(
+                            err.response?.data?.message || 'Failed to update role'
+                        );
+                    }
+                }}
             />
+
         </Box>
     );
 };

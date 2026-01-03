@@ -41,7 +41,7 @@ const ManageMembersDialog = ({
     const theme = useTheme();
     const [email, setEmail] = useState('');
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         if (!email.trim()) {
             notify.error('Please enter an email address');
             return;
@@ -57,9 +57,11 @@ const ManageMembersDialog = ({
             return;
         }
 
-        onAddMember(email.trim());
-        notify.success('Member invited successfully');
-        setEmail('');
+        const success = await onAddMember(email.trim());
+
+        if (success) {
+            setEmail('');
+        }
     };
 
 
@@ -197,7 +199,13 @@ const ManageMembersDialog = ({
                                                 sx={{
                                                     fontWeight: 500,
                                                     background: `linear-gradient(-45deg, ${theme.palette.primary[300]}, ${theme.palette.accent.main})`,
-                                                    color: theme.palette.common.white,
+                                                    color: theme.palette.text.white,
+                                                    px: 0.5,
+                                                    '& .MuiChip-icon': {
+                                                        color: theme.palette.text.white,
+                                                        marginLeft: '6px',
+
+                                                    },
                                                 }}
                                             />
                                         ) : (
