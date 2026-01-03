@@ -12,6 +12,12 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <Toaster
+        position="top-center"
+        richColors
+        closeButton
+        theme={mode}
+      />
       <AppRouter />
     </ThemeProvider>
   );
