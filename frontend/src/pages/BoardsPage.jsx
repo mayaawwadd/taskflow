@@ -30,6 +30,10 @@ import {
     updateWorkspaceMemberRole,
 } from '../api/workspaceMembers';
 import { fetchWorkspaces } from '../api/workspaces';
+import { Clock } from 'lucide-react';
+import ActivityDrawer from '../components/Activity/ActivityDrawer';
+import { fetchWorkspaceActivity } from '../api/activity';
+
 
 const BoardsPage = () => {
     const { workspaceId } = useParams();
@@ -43,6 +47,9 @@ const BoardsPage = () => {
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [membersOpen, setMembersOpen] = useState(false);
+
+    const [activityOpen, setActivityOpen] = useState(false);
+    const [activity, setActivity] = useState([]);
 
     const [newBoard, setNewBoard] = useState({
         title: '',
@@ -115,6 +122,17 @@ const BoardsPage = () => {
         }
     };
 
+    const openActivity = async () => {
+        try {
+            const data = await fetchWorkspaceActivity(workspaceId);
+            setActivity(data);
+            setActivityOpen(true);
+        } catch {
+            notify.error('Failed to load activity');
+        }
+    };
+
+
     /* ================= LOADING / EMPTY ================= */
     if (loading) {
         return (
@@ -153,29 +171,50 @@ const BoardsPage = () => {
                         </Typography>
                     </Box>
 
-                    <Button
-                        startIcon={<Users size={18} />}
-                        onClick={() => setMembersOpen(true)}
-                        variant="contained"
+                    <Box
                         sx={{
-                            background: `linear-gradient(-45deg, ${theme.palette.primary[400]}, ${theme.palette.accent.main})`,
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            borderRadius: 2,
-                            alignSelf: 'center',
-                            px: 2,
-                            py: 0.7,
-                            transition: '0.3s ease-in-out',
-                            '&:hover': {
-                                opacity: 0.9,
-                                boxShadow: `0 4px 10px ${theme.palette.primary.main}33`,
-                            },
-                            '&:focus': { outline: 'none' },
-                            '&:focus-visible': { outline: 'none' },
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
                         }}
                     >
-                        Members ({members.length})
-                    </Button>
+                        {/* Activity icon */}
+                        <Button
+                            variant="outlined"
+                            onClick={openActivity}
+                            sx={{
+                                minWidth: 40,
+                                px: 1.2,
+                                borderRadius: 2,
+                            }}
+                        >
+                            <Clock size={18} />
+                        </Button>
+
+                        <Button
+                            startIcon={<Users size={18} />}
+                            onClick={() => setMembersOpen(true)}
+                            variant="contained"
+                            sx={{
+                                background: `linear-gradient(-45deg, ${theme.palette.primary[400]}, ${theme.palette.accent.main})`,
+                                textTransform: 'none',
+                                fontWeight: 500,
+                                borderRadius: 2,
+                                alignSelf: 'center',
+                                px: 2,
+                                py: 0.7,
+                                transition: '0.3s ease-in-out',
+                                '&:hover': {
+                                    opacity: 0.9,
+                                    boxShadow: `0 4px 10px ${theme.palette.primary.main}33`,
+                                },
+                                '&:focus': { outline: 'none' },
+                                '&:focus-visible': { outline: 'none' },
+                            }}
+                        >
+                            Members ({members.length})
+                        </Button>
+                    </Box>
                 </Box>
 
                 {/* ---------- Boards ---------- */}
@@ -321,6 +360,13 @@ const BoardsPage = () => {
                     }
                 }}
             />
+
+            <ActivityDrawer
+                open={activityOpen}
+                onClose={() => setActivityOpen(false)}
+                activity={activity}
+            />
+
         </Box>
     );
 };

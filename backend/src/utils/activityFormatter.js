@@ -28,6 +28,10 @@ export const formatActivity = (log) => {
             message = `${actorName} invited a member to the workspace`;
             break;
 
+        case 'workspace_member_role_changed':
+            message = `${actorName} changed a member’s role`;
+            break;
+
         case 'workspace_member_removed':
             message = `${actorName} removed a member from the workspace`;
             break;

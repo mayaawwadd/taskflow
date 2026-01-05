@@ -29,6 +29,7 @@ const AppRouter = () => {
 
                     <Route element={<MainLayout />}>
                         <Route path='/home' element={<Home />} />
+                        <Route path='/' element={<Home />} />
                         <Route element={<ProtectedRoute />}>
 
                             <Route path="/workspaces" element={<WorkspacePage />} />

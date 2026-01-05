@@ -213,7 +213,6 @@ export const updateWorkspaceMemberRole = async (req, res) => {
             return res.status(400).json({ message: 'Role is required' });
         }
 
-        // Only owner/admin can change roles
         const requester = await WorkspaceMember.findOne({
             workspace: workspaceId,
             user: req.user._id,
@@ -235,18 +234,35 @@ export const updateWorkspaceMemberRole = async (req, res) => {
         }
 
         if (membership.role === 'owner') {
-            return res.status(400).json({ message: 'Owner role cannot be changed' });
+            return res
+                .status(400)
+                .json({ message: 'Owner role cannot be changed' });
         }
+
+        const previousRole = membership.role;
 
         membership.role = role;
         membership.updatedBy = req.user._id;
         await membership.save();
+
+        await logActivity({
+            actor: req.user._id,
+            action: 'workspace_member_role_changed',
+            entityType: 'workspace',
+            entityId: workspaceId,
+            metadata: {
+                targetUser: userId,
+                fromRole: previousRole,
+                toRole: role,
+            },
+        });
 
         res.status(200).json({ message: 'Role updated successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 /* ========== DELETE WORKSPACE ========== */
 export const deleteWorkspace = async (req, res) => {

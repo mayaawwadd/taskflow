@@ -46,6 +46,9 @@ import { fetchCardsByList, createCard, moveCard, deleteCard as deleteCardAPI, up
 import ManageBoardMembersDialog from '../components/Board/ManageBoardMembersDialog';
 import CardDetailsDialog from '../components/Card/CardDetailsDialog';
 
+import { Clock } from 'lucide-react';
+import ActivityDrawer from '../components/Activity/ActivityDrawer';
+import { fetchBoardActivity } from '../api/activity';
 
 const BoardDetails = () => {
     const theme = useTheme();
@@ -71,6 +74,9 @@ const BoardDetails = () => {
     const [isBoardMembersOpen, setIsBoardMembersOpen] = useState(false);
     const [boardMembers, setBoardMembers] = useState([]);
     const [workspaceMembers, setWorkspaceMembers] = useState([]);
+
+    const [activityOpen, setActivityOpen] = useState(false);
+    const [activity, setActivity] = useState([]);
 
 
     /* ---------- Load board + lists + cards ---------- */
@@ -254,6 +260,15 @@ const BoardDetails = () => {
         }
     };
 
+    const openActivity = async () => {
+        try {
+            const data = await fetchBoardActivity(boardId);
+            setActivity(data);
+            setActivityOpen(true);
+        } catch {
+            notify.error('Failed to load activity');
+        }
+    };
 
     /* ---------- DND ---------- */
     const sensors = useSensors(
@@ -433,30 +448,45 @@ const BoardDetails = () => {
                         )}
                     </Box>
 
-                    <Button
-                        startIcon={<Users size={18} />}
-                        variant="contained"
-                        onClick={() => setIsBoardMembersOpen(true)}
-                        sx={{
-                            background: `linear-gradient(-45deg, ${theme.palette.primary[400]}, ${theme.palette.accent.main})`,
-                            textTransform: 'none',
-                            fontWeight: 500,
-                            borderRadius: 2,
-                            alignSelf: 'center',
-                            px: 2,
-                            py: 0.7,
-                            transition: '0.3s ease-in-out',
-                            '&:hover': {
-                                opacity: 0.9,
-                                boxShadow: `0 4px 10px ${theme.palette.primary.main}33`,
-                            },
-                            '&:focus': { outline: 'none' },
-                            '&:focus-visible': { outline: 'none' },
-                        }}
-                    >
-                        Members ({membersCount})
-                    </Button>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {/* Activity */}
+                        <Button
+                            variant="outlined"
+                            onClick={openActivity}
+                            sx={{
+                                minWidth: 40,
+                                px: 1.2,
+                                borderRadius: 2,
+                            }}
+                        >
+                            <Clock size={18} />
+                        </Button>
 
+                        {/* Members */}
+                        <Button
+                            startIcon={<Users size={18} />}
+                            variant="contained"
+                            onClick={() => setIsBoardMembersOpen(true)}
+                            sx={{
+                                background: `linear-gradient(-45deg, ${theme.palette.primary[400]}, ${theme.palette.accent.main})`,
+                                textTransform: 'none',
+                                fontWeight: 500,
+                                borderRadius: 2,
+                                alignSelf: 'center',
+                                px: 2,
+                                py: 0.7,
+                                transition: '0.3s ease-in-out',
+                                '&:hover': {
+                                    opacity: 0.9,
+                                    boxShadow: `0 4px 10px ${theme.palette.primary.main}33`,
+                                },
+                                '&:focus': { outline: 'none' },
+                                '&:focus-visible': { outline: 'none' },
+                            }}
+                        >
+                            Members ({membersCount})
+                        </Button>
+                    </Box>
                 </Box>
 
                 {/* ---------- Kanban Board ---------- */}
@@ -680,6 +710,12 @@ const BoardDetails = () => {
                 onClose={() => setSelectedCard(null)}
                 onDelete={handleDeleteCard}
                 onUpdate={handleUpdateCard}
+            />
+
+            <ActivityDrawer
+                open={activityOpen}
+                onClose={() => setActivityOpen(false)}
+                activity={activity}
             />
         </Box>
     );
